@@ -1,0 +1,1182 @@
+// ======================================================
+// QUẢN LÝ THIẾT BỊ ĐIỆN TỬ HS - HK1 NĂM HỌC 2026-2027
+// Code gửi email GVCN theo cấu trúc sheet mới
+// ======================================================
+
+const CONFIG = {
+  // Các sheet nhập dữ liệu vi phạm
+SHEETS: [
+  "Thiết bị Khối 10, HK1 năm 2026 - 2027",
+  "Thiết bị Khối 11, HK1 năm 2026 - 2027",
+  "Thiết bị Khối 12, HK1 năm 2026 - 2027"
+],
+
+  // Sheet danh sách học sinh
+  DATA_SHEET: "Dữ Liệu",
+
+  // Sheet danh sách GVCN
+  GVCN_SHEET: "Email_GVCN",
+
+  // Chỉ ghi các lỗi hệ thống ngoài dự kiến
+  SYSTEM_LOG_SHEET: "DEBUG_LOG",
+
+  // Nhật ký chẩn đoán quyền gửi mail và gửi ngoài miền
+  MAIL_DIAGNOSTIC_SHEET: "MAIL_DIAGNOSTIC",
+
+  // Dữ liệu bắt đầu từ dòng 5
+  START_ROW: 5,
+
+  // Người dùng nhập từ B:F
+  FIRST_INPUT_COL: 2,
+  LAST_INPUT_COL: 6,
+
+  // N = Tình trạng send email
+  STATUS_COL: 14,
+
+  // Để "" là gửi tất cả lớp.
+  // Ví dụ "10A1" để chỉ test lớp 10A1.
+  TEST_ONLY_CLASS: ""
+};
+
+
+// ======================================================
+// CỘT TRONG SHEET THIẾT BỊ
+// ======================================================
+const MAIN_COL = {
+  STT: 1,                // A
+  NGAY: 2,               // B
+  NGUOI_THU: 3,          // C
+  THIET_BI: 4,           // D
+  TINH_TRANG_KHI_THU: 5, // E
+  MA_HS: 6,              // F
+  TEN_HS: 7,             // G
+  LOP: 8,                // H
+  SO_LAN_THU: 9,         // I
+  THOI_GIAN_THU: 10,     // J
+  TINH_TRANG_KHI_TRA: 11,// K
+  NGAY_TRA: 12,          // L
+  NOTE: 13,              // M
+  STATUS: 14             // N
+};
+
+
+// ======================================================
+// TRIGGER ON EDIT
+// Dùng INSTALLABLE TRIGGER, không dùng simple onEdit.
+// ======================================================
+function guiMailKhiThuDo(e) {
+  let ss = null;
+  let sheet = null;
+
+  try {
+    if (!e || !e.range) {
+      throw new Error(
+        "Hàm guiMailKhiThuDo phải được chạy bằng trigger Khi chỉnh sửa (On edit), không chạy trực tiếp."
+      );
+    }
+
+    ss = e.source;
+    sheet = e.range.getSheet();
+
+    // Chỉ theo dõi đúng 3 sheet thiết bị.
+    if (!CONFIG.SHEETS.includes(sheet.getName().trim())) {
+      return;
+    }
+
+    // Bỏ qua phần tiêu đề.
+    if (e.range.getLastRow() < CONFIG.START_ROW) {
+      return;
+    }
+
+    // Chỉ chạy khi thao tác có chạm vào B:F.
+    if (
+      e.range.getColumn() > CONFIG.LAST_INPUT_COL ||
+      e.range.getLastColumn() < CONFIG.FIRST_INPUT_COL
+    ) {
+      return;
+    }
+
+    const dataSheet = ss.getSheetByName(CONFIG.DATA_SHEET);
+    const gvcnSheet = ss.getSheetByName(CONFIG.GVCN_SHEET);
+
+    if (!dataSheet) {
+      throw new Error('Không tìm thấy sheet "' + CONFIG.DATA_SHEET + '".');
+    }
+
+    if (!gvcnSheet) {
+      throw new Error('Không tìm thấy sheet "' + CONFIG.GVCN_SHEET + '".');
+    }
+
+    // Chống gửi trùng khi nhiều người nhập cùng lúc.
+    const lock = LockService.getDocumentLock() || LockService.getScriptLock();
+    let daKhoa = false;
+
+    try {
+      daKhoa = lock.tryLock(10000);
+
+      if (!daKhoa) {
+        ghiTrangThaiVung(
+          sheet,
+          e.range,
+          "CHƯA GỬI: Hệ thống đang xử lý dữ liệu khác, vui lòng thử lại sau vài giây"
+        );
+        return;
+      }
+
+      // Đọc dữ liệu một lần cho toàn bộ thao tác edit/paste.
+      const studentMap = taoStudentMap(dataSheet);
+      const emailMap = taoEmailMap(gvcnSheet);
+
+      const firstRow = Math.max(e.range.getRow(), CONFIG.START_ROW);
+      const lastRow = e.range.getLastRow();
+
+      for (let row = firstRow; row <= lastRow; row++) {
+        xuLyDong(ss, sheet, row, studentMap, emailMap);
+      }
+
+    } finally {
+      if (daKhoa && lock.hasLock()) {
+        lock.releaseLock();
+      }
+    }
+
+  } catch (error) {
+    // Lỗi ngoài dự kiến mới ghi DEBUG_LOG.
+    if (ss) {
+      const row = e && e.range ? e.range.getRow() : "";
+
+      if (
+        sheet &&
+        row >= CONFIG.START_ROW &&
+        CONFIG.SHEETS.includes(sheet.getName().trim()) &&
+        dongCoDuLieuNhap(sheet, row)
+      ) {
+        try {
+          sheet
+            .getRange(row, CONFIG.STATUS_COL)
+            .setValue("LỖI HỆ THỐNG - xem DEBUG_LOG");
+        } catch (ignore) {
+          // Bỏ qua nếu không thể ghi trạng thái.
+        }
+      }
+
+      ghiLoiHeThong(
+        ss,
+        sheet ? sheet.getName() : "",
+        row,
+        "guiMailKhiThuDo",
+        error
+      );
+    }
+
+    console.error(error);
+  }
+}
+
+
+// ======================================================
+// TẠO MAP HỌC SINH TỪ SHEET "Dữ Liệu"
+//
+// Cấu trúc mới:
+// A = STT
+// B = Số / Mã HS
+// C = Tên học sinh
+// D = Lớp
+// E = GVCN (email)
+// F = Phòng KTX
+// G = GVQN
+// ======================================================
+function taoStudentMap(dataSheet) {
+  const studentMap = new Map();
+  const lastRow = dataSheet.getLastRow();
+
+  if (lastRow < 2) {
+    return studentMap;
+  }
+
+  const data = dataSheet
+    .getRange(2, 1, lastRow - 1, 7)
+    .getDisplayValues();
+
+  data.forEach(function(r) {
+    const maHS = chuanHoaMaHS(r[1]);
+
+    if (!maHS) {
+      return;
+    }
+
+    studentMap.set(maHS, {
+      name: String(r[2]).trim(),
+      className: String(r[3]).trim(),
+      gvcnEmail: String(r[4]).trim(),
+      dorm: String(r[5]).trim(),
+      gvqn: String(r[6]).trim()
+    });
+  });
+
+  return studentMap;
+}
+
+
+// ======================================================
+// TẠO MAP GVCN TỪ SHEET "Email_GVCN"
+//
+// A = Lớp
+// B = Tên giáo viên
+// C = Email
+//
+// Nếu một lớp xuất hiện nhiều dòng, dữ liệu không rỗng ở
+// dòng sau sẽ bổ sung/ghi đè dữ liệu trước.
+// ======================================================
+function taoEmailMap(gvcnSheet) {
+  const emailMap = new Map();
+  const lastRow = gvcnSheet.getLastRow();
+
+  if (lastRow < 2) {
+    return emailMap;
+  }
+
+  const data = gvcnSheet
+    .getRange(2, 2, lastRow - 1, 3)
+    .getDisplayValues();
+
+  data.forEach(function(r) {
+    const lop = chuanHoaLop(r[0]);
+
+    if (!lop) {
+      return;
+    }
+
+    const teacher = lamSachKetQuaCongThuc(r[1]);
+    const email = lamSachKetQuaCongThuc(r[2]);
+
+    const old = emailMap.get(lop) || {
+      teacher: "",
+      email: ""
+    };
+
+    if (teacher) {
+      old.teacher = teacher;
+    }
+
+    if (email) {
+      old.email = email;
+    }
+
+    emailMap.set(lop, old);
+  });
+
+  return emailMap;
+}
+
+
+// ======================================================
+// XỬ LÝ MỘT DÒNG
+// ======================================================
+function xuLyDong(ss, sheet, row, studentMap, emailMap) {
+  const statusCell = sheet.getRange(row, CONFIG.STATUS_COL);
+
+  try {
+    // B:F theo cấu trúc sheet mới:
+    // B = Ngày
+    // C = Người thu
+    // D = Tên thiết bị
+    // E = Tình trạng máy khi thu
+    // F = Mã HS
+    const values = sheet
+      .getRange(row, MAIN_COL.NGAY, 1, 5)
+      .getDisplayValues()[0];
+
+    const ngay = String(values[0]).trim();
+    const nguoiThu = String(values[1]).trim();
+    const thietBi = String(values[2]).trim();
+    const tinhTrang = String(values[3]).trim();
+    const maHS = chuanHoaMaHS(values[4]);
+
+    // Nếu toàn bộ B:F rỗng hoặc chỉ có khoảng trắng:
+    // không cảnh báo và xóa trạng thái cũ nếu có.
+    if (!coBatKyDuLieuNhap(values)) {
+      if (String(statusCell.getDisplayValue()).trim() !== "") {
+        statusCell.clearContent();
+      }
+
+      return;
+    }
+
+    // Không gửi lại dòng đã gửi thành công.
+    const oldStatus = String(statusCell.getDisplayValue()).trim();
+
+    if (oldStatus.startsWith("ĐÃ GỬI")) {
+      return;
+    }
+
+    // Kiểm tra đủ B:F.
+    const missing = [];
+
+    if (!ngay) missing.push("Ngày");
+    if (!nguoiThu) missing.push("Người thu");
+    if (!thietBi) missing.push("Tên thiết bị");
+    if (!tinhTrang) missing.push("Tình trạng máy khi thu");
+    if (!maHS) missing.push("Mã học sinh");
+
+    if (missing.length > 0) {
+      statusCell.setValue("CHƯA GỬI: Thiếu " + missing.join(", "));
+      return;
+    }
+
+    // Tìm học sinh theo cột B của Dữ Liệu.
+    const student = studentMap.get(maHS);
+
+    if (!student) {
+      statusCell.setValue(
+        "LỖI: Không tìm thấy mã học sinh " +
+        maHS +
+        ' trong sheet "Dữ Liệu"'
+      );
+      return;
+    }
+
+    if (!student.name) {
+      statusCell.setValue("LỖI: Học sinh chưa có tên trong sheet Dữ Liệu");
+      return;
+    }
+
+    const lop = chuanHoaLop(student.className);
+
+    if (!lop) {
+      statusCell.setValue("LỖI: Học sinh chưa có thông tin lớp");
+      return;
+    }
+
+    // Chế độ test theo lớp.
+    if (
+      CONFIG.TEST_ONLY_CLASS !== "" &&
+      lop !== chuanHoaLop(CONFIG.TEST_ONLY_CLASS)
+    ) {
+      statusCell.setValue(
+        "BỎ QUA: Hiện chỉ test gửi mail lớp " + CONFIG.TEST_ONLY_CLASS
+      );
+      return;
+    }
+
+    // ==================================================
+    // LẤY GVCN
+    // Ưu tiên Email_GVCN.
+    // Nếu Email_GVCN chưa có email thì dùng cột E Dữ Liệu.
+    // ==================================================
+    const mappedGvcn = emailMap.get(lop) || {
+      teacher: "",
+      email: ""
+    };
+
+    const tenGVCN = lamSachKetQuaCongThuc(mappedGvcn.teacher);
+    const emailGVCN =
+      lamSachKetQuaCongThuc(mappedGvcn.email) ||
+      lamSachKetQuaCongThuc(student.gvcnEmail);
+
+    if (!emailGVCN) {
+      statusCell.setValue(
+        "LỖI: Chưa có email GVCN lớp " +
+        lop +
+        ' trong Email_GVCN hoặc cột E của "Dữ Liệu"'
+      );
+      return;
+    }
+
+    if (!kiemTraEmail(emailGVCN)) {
+      statusCell.setValue(
+        "LỖI: Email GVCN không hợp lệ - " + emailGVCN
+      );
+      return;
+    }
+
+    // ==================================================
+    // TÍNH TRỰC TIẾP SỐ LẦN THU VÀ THỜI GIAN THU
+    // KHÔNG phụ thuộc việc công thức G:J đã kịp tính hay chưa.
+    //
+    // I = Số lần thu
+    // J = Thời gian thu
+    // ==================================================
+    const soLanThu = demSoLanThuDenDong(sheet, row, maHS);
+    const thoiGianThu = xacDinhThoiGianThu(soLanThu);
+
+    if (soLanThu <= 0 || !thoiGianThu) {
+      statusCell.setValue(
+        "CHƯA GỬI: Không xác định được số lần thu/thời gian thu"
+      );
+      return;
+    }
+
+    // ==================================================
+    // KIỂM TRA QUOTA
+    // ==================================================
+    let quota;
+
+    try {
+      quota = MailApp.getRemainingDailyQuota();
+    } catch (error) {
+      const diagnostic = taoThongTinChanDoanMail(
+        emailGVCN,
+        "",
+        "KIỂM TRA QUOTA"
+      );
+
+      ghiNhatKyChanDoanMail(ss, diagnostic, "THẤT BẠI", error);
+
+      const translated = dichLoiMail(error);
+
+      if (translated) {
+        statusCell.setValue(translated);
+        return;
+      }
+
+      throw error;
+    }
+
+    if (quota <= 0) {
+      const diagnostic = taoThongTinChanDoanMail(
+        emailGVCN,
+        quota,
+        "GỬI THỰC TẾ"
+      );
+
+      ghiNhatKyChanDoanMail(
+        ss,
+        diagnostic,
+        "THẤT BẠI",
+        new Error("Quota MailApp bằng 0")
+      );
+
+      statusCell.setValue(
+        "LỖI: Tài khoản đã hết lượt gửi email trong ngày"
+      );
+      return;
+    }
+
+    // ==================================================
+    // GIỮ NGUYÊN CÁC THÔNG TIN CẦN GỬI MAIL:
+    // - Học sinh
+    // - Lớp
+    // - Mã HS
+    // - Ngày thu
+    // - Thiết bị
+    // - Số lần thu
+    // - Thời gian thu
+    // ==================================================
+    const subject =
+      "Học sinh vi phạm quy định sử dụng thiết bị điện tử trên giảng đường";
+
+    const nguoiNhanHienThi = tenGVCN
+      ? tenGVCN
+      : "GVCN lớp " + lop;
+
+    const body =
+      "Kính gửi thầy/cô " +
+      nguoiNhanHienThi +
+      ",\n\n" +
+      "Hệ thống ghi nhận trường hợp học sinh vi phạm quy định về sử dụng thiết bị điện tử trên giảng đường như sau:\n\n" +
+      "Học sinh: " + student.name + "\n" +
+      "Lớp: " + lop + "\n" +
+      "Mã HS: " + maHS + "\n" +
+      "Ngày thu: " + ngay + "\n" +
+      "Thiết bị: " + thietBi + "\n" +
+      "Số lần thu: " + soLanThu + "\n" +
+      "Thời gian thu: " + thoiGianThu + "\n\n" +
+      "Đây là email được gửi tự động từ hệ thống quản lý thiết bị học sinh.";
+
+    const htmlBody = `
+      <p>
+        Kính gửi thầy/cô <b>${escapeHtml(nguoiNhanHienThi)}</b>,
+      </p>
+
+      <p>
+        Hệ thống ghi nhận trường hợp học sinh bị thu thiết bị như sau:
+      </p>
+
+      <table
+        cellpadding="6"
+        cellspacing="0"
+        border="1"
+        style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;"
+      >
+        <tr>
+          <td><b>Học sinh</b></td>
+          <td>${escapeHtml(student.name)}</td>
+        </tr>
+        <tr>
+          <td><b>Lớp</b></td>
+          <td>${escapeHtml(lop)}</td>
+        </tr>
+        <tr>
+          <td><b>Mã HS</b></td>
+          <td>${escapeHtml(maHS)}</td>
+        </tr>
+        <tr>
+          <td><b>Ngày thu</b></td>
+          <td>${escapeHtml(ngay)}</td>
+        </tr>
+        <tr>
+          <td><b>Thiết bị</b></td>
+          <td>${escapeHtml(thietBi)}</td>
+        </tr>
+        <tr>
+          <td><b>Số lần thu</b></td>
+          <td>${escapeHtml(soLanThu)}</td>
+        </tr>
+        <tr>
+          <td><b>Thời gian thu</b></td>
+          <td>${escapeHtml(thoiGianThu)}</td>
+        </tr>
+      </table>
+
+      <br>
+      <p>
+        <i>Đây là email được gửi tự động từ hệ thống quản lý thiết bị học sinh.</i>
+      </p>
+    `;
+
+    // ==================================================
+    // GỬI EMAIL
+    // ==================================================
+    const mailDiagnostic = taoThongTinChanDoanMail(
+      emailGVCN,
+      quota,
+      "GỬI THỰC TẾ"
+    );
+
+    console.log(
+      "MAIL_ATTEMPT " + JSON.stringify(mailDiagnostic)
+    );
+
+    try {
+      statusCell.setValue("ĐANG GỬI...");
+      SpreadsheetApp.flush();
+
+      MailApp.sendEmail({
+        to: emailGVCN,
+        subject: subject,
+        body: body,
+        htmlBody: htmlBody
+      });
+
+      console.log(
+        "MAIL_SUCCESS " + JSON.stringify(mailDiagnostic)
+      );
+
+      ghiNhatKyChanDoanMail(
+        ss,
+        mailDiagnostic,
+        "THÀNH CÔNG",
+        ""
+      );
+
+    } catch (error) {
+      console.error(
+        "MAIL_FAILURE " +
+        JSON.stringify({
+          diagnostic: mailDiagnostic,
+          error: layThongBaoLoi(error)
+        })
+      );
+
+      ghiNhatKyChanDoanMail(
+        ss,
+        mailDiagnostic,
+        "THẤT BẠI",
+        error
+      );
+
+      const translated = dichLoiMail(error);
+
+      if (translated) {
+        statusCell.setValue(translated);
+        return;
+      }
+
+      throw error;
+    }
+
+    // Thành công -> ghi ở cột N.
+    const timezone = ss.getSpreadsheetTimeZone();
+    const time = Utilities.formatDate(
+      new Date(),
+      timezone,
+      "dd/MM/yyyy HH:mm:ss"
+    );
+
+    statusCell.setValue("ĐÃ GỬI - " + time);
+
+  } catch (error) {
+    // Không để trạng thái lỗi tồn tại trên dòng B:F hoàn toàn rỗng.
+    if (dongCoDuLieuNhap(sheet, row)) {
+      statusCell.setValue("LỖI HỆ THỐNG - xem DEBUG_LOG");
+    } else {
+      statusCell.clearContent();
+    }
+
+    ghiLoiHeThong(
+      ss,
+      sheet.getName(),
+      row,
+      "xuLyDong",
+      error
+    );
+
+    console.error(error);
+  }
+}
+
+
+// ======================================================
+// ĐẾM SỐ LẦN MÃ HS XUẤT HIỆN TỪ DÒNG 5 ĐẾN DÒNG HIỆN TẠI
+// Tương đương COUNTIF(F$5:F[row], F[row]).
+// ======================================================
+function demSoLanThuDenDong(sheet, row, maHS) {
+  const soDong = row - CONFIG.START_ROW + 1;
+
+  if (soDong <= 0) {
+    return 0;
+  }
+
+  const values = sheet
+    .getRange(CONFIG.START_ROW, MAIN_COL.MA_HS, soDong, 1)
+    .getDisplayValues();
+
+  let count = 0;
+
+  for (let i = 0; i < values.length; i++) {
+    if (chuanHoaMaHS(values[i][0]) === maHS) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+
+// ======================================================
+// QUY TẮC THỜI GIAN THU
+// Lần 1 -> Thu 1 tuần
+// Lần 2 -> Thu 1 tháng
+// Lần 3 trở lên -> Thu hết kỳ
+// ======================================================
+function xacDinhThoiGianThu(soLanThu) {
+  if (soLanThu === 1) return "Thu 1 tuần";
+  if (soLanThu === 2) return "Thu 1 tháng";
+  if (soLanThu >= 3) return "Thu hết kỳ";
+  return "";
+}
+
+
+// ======================================================
+// GHI CÙNG MỘT TRẠNG THÁI CHO CÁC DÒNG BỊ EDIT/PASTE
+// ======================================================
+function ghiTrangThaiVung(sheet, editedRange, message) {
+  const firstRow = Math.max(editedRange.getRow(), CONFIG.START_ROW);
+  const lastRow = editedRange.getLastRow();
+
+  if (lastRow < firstRow) {
+    return;
+  }
+
+  const rowCount = lastRow - firstRow + 1;
+  const inputWidth =
+    CONFIG.LAST_INPUT_COL - CONFIG.FIRST_INPUT_COL + 1;
+
+  const inputValues = sheet
+    .getRange(
+      firstRow,
+      CONFIG.FIRST_INPUT_COL,
+      rowCount,
+      inputWidth
+    )
+    .getDisplayValues();
+
+  const statusValues = inputValues.map(function(rowValues) {
+    return [coBatKyDuLieuNhap(rowValues) ? message : ""];
+  });
+
+  sheet
+    .getRange(firstRow, CONFIG.STATUS_COL, rowCount, 1)
+    .setValues(statusValues);
+}
+
+
+// ======================================================
+// KIỂM TRA DỮ LIỆU NHẬP B:F
+// Chỉ coi là có dữ liệu khi ít nhất một ô khác rỗng
+// sau khi loại bỏ khoảng trắng.
+// ======================================================
+function coBatKyDuLieuNhap(values) {
+  return values.some(function(value) {
+    return String(value == null ? "" : value).trim() !== "";
+  });
+}
+
+
+function dongCoDuLieuNhap(sheet, row) {
+  const inputWidth =
+    CONFIG.LAST_INPUT_COL - CONFIG.FIRST_INPUT_COL + 1;
+
+  const values = sheet
+    .getRange(row, CONFIG.FIRST_INPUT_COL, 1, inputWidth)
+    .getDisplayValues()[0];
+
+  return coBatKyDuLieuNhap(values);
+}
+
+
+// ======================================================
+// LÀM SẠCH GIÁ TRỊ TỪ Ô CÔNG THỨC
+// #ERROR!, #N/A, #REF!, ... được coi như rỗng.
+// ======================================================
+function lamSachKetQuaCongThuc(value) {
+  const text = String(value == null ? "" : value).trim();
+
+  if (!text) {
+    return "";
+  }
+
+  if (text.startsWith("#")) {
+    return "";
+  }
+
+  return text;
+}
+
+
+// ======================================================
+// CHUẨN HÓA MÃ HS
+// ======================================================
+function chuanHoaMaHS(value) {
+  return String(value == null ? "" : value).trim();
+}
+
+
+// ======================================================
+// KIỂM TRA EMAIL
+// ======================================================
+function kiemTraEmail(email) {
+  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return pattern.test(String(email).trim());
+}
+
+
+// ======================================================
+// CHUẨN HÓA LỚP
+// " 10A1 " -> "10A1"
+// "10a1"   -> "10A1"
+// ======================================================
+function chuanHoaLop(value) {
+  return String(value == null ? "" : value)
+    .trim()
+    .replace(/\s+/g, "")
+    .toUpperCase();
+}
+
+
+// ======================================================
+// CHỐNG KÝ TỰ HTML
+// ======================================================
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+// ======================================================
+// DỊCH CÁC LỖI MAIL PHỔ BIẾN SANG TIẾNG VIỆT
+// Các lỗi này chỉ ghi ở cột N, KHÔNG ghi DEBUG_LOG.
+// ======================================================
+// ======================================================
+// CHẨN ĐOÁN TÀI KHOẢN VÀ QUYỀN GỬI MAIL
+// MAIL_DIAGNOSTIC ghi cả lần gửi thật và lần kiểm tra.
+// ======================================================
+function layThongBaoLoi(error) {
+  return error && error.message
+    ? String(error.message)
+    : String(error == null ? "" : error);
+}
+
+
+function layTenMienEmail(email) {
+  const text = String(email == null ? "" : email).trim().toLowerCase();
+  const atIndex = text.lastIndexOf("@");
+
+  return atIndex >= 0 ? text.slice(atIndex + 1) : "";
+}
+
+
+function taoThongTinChanDoanMail(recipient, quota, testType) {
+  const effectiveUser = String(
+    Session.getEffectiveUser().getEmail() || ""
+  ).trim();
+
+  const activeUser = String(
+    Session.getActiveUser().getEmail() || ""
+  ).trim();
+
+  const recipientText = String(recipient == null ? "" : recipient).trim();
+  const senderDomain = layTenMienEmail(effectiveUser);
+  const recipientDomain = layTenMienEmail(recipientText);
+
+  return {
+    testType: testType,
+    effectiveUser: effectiveUser,
+    activeUser: activeUser,
+    senderDomain: senderDomain,
+    recipient: recipientText,
+    recipientDomain: recipientDomain,
+    isExternal:
+      Boolean(senderDomain && recipientDomain) &&
+      senderDomain !== recipientDomain,
+    quotaBeforeSend: quota
+  };
+}
+
+
+function ghiNhatKyChanDoanMail(ss, diagnostic, result, error) {
+  try {
+    let logSheet = ss.getSheetByName(CONFIG.MAIL_DIAGNOSTIC_SHEET);
+
+    if (!logSheet) {
+      logSheet = ss.insertSheet(CONFIG.MAIL_DIAGNOSTIC_SHEET);
+
+      logSheet.appendRow([
+        "Thời gian",
+        "Loại kiểm tra",
+        "Tài khoản thực thi",
+        "Tài khoản đang thao tác",
+        "Tên miền người gửi",
+        "Người nhận",
+        "Tên miền người nhận",
+        "Ngoài miền?",
+        "Quota trước khi gửi",
+        "Kết quả",
+        "Lỗi chi tiết",
+        "Nhận định"
+      ]);
+    }
+
+    const timezone = ss.getSpreadsheetTimeZone();
+    const time = Utilities.formatDate(
+      new Date(),
+      timezone,
+      "dd/MM/yyyy HH:mm:ss"
+    );
+
+    const errorMessage = layThongBaoLoi(error);
+    let assessment = "";
+
+    if (result === "THÀNH CÔNG") {
+      assessment = diagnostic.isExternal
+        ? "Gửi ngoài miền thành công - không bị chặn với người nhận này"
+        : "Gửi nội bộ thành công";
+    } else if (diagnostic.isExternal) {
+      assessment =
+        "Gửi ngoài miền thất bại; so sánh với dòng TEST NỘI BỘ để xác định khả năng quản trị chặn";
+    } else {
+      assessment =
+        "Gửi nội bộ thất bại; kiểm tra Gmail, quyền MailApp, giấy phép và quota của tài khoản thực thi";
+    }
+
+    logSheet.appendRow([
+      time,
+      diagnostic.testType,
+      diagnostic.effectiveUser,
+      diagnostic.activeUser,
+      diagnostic.senderDomain,
+      diagnostic.recipient,
+      diagnostic.recipientDomain,
+      diagnostic.isExternal ? "CÓ" : "KHÔNG",
+      diagnostic.quotaBeforeSend,
+      result,
+      errorMessage,
+      assessment
+    ]);
+
+  } catch (logError) {
+    console.error(
+      "Không thể ghi MAIL_DIAGNOSTIC:",
+      logError
+    );
+  }
+}
+
+
+function guiMailThuChanDoan(ss, recipient, testType) {
+  let quota = "";
+
+  try {
+    quota = MailApp.getRemainingDailyQuota();
+  } catch (error) {
+    const diagnostic = taoThongTinChanDoanMail(
+      recipient,
+      quota,
+      testType
+    );
+
+    ghiNhatKyChanDoanMail(ss, diagnostic, "THẤT BẠI", error);
+
+    return {
+      success: false,
+      error: layThongBaoLoi(error)
+    };
+  }
+
+  const diagnostic = taoThongTinChanDoanMail(
+    recipient,
+    quota,
+    testType
+  );
+
+  try {
+    MailApp.sendEmail({
+      to: recipient,
+      subject: "[TEST] Kiểm tra quyền gửi MailApp",
+      body:
+        "Đây là email kiểm tra tự động để xác định tài khoản Apps Script có thể gửi nội bộ hoặc ngoài miền hay không."
+    });
+
+    ghiNhatKyChanDoanMail(
+      ss,
+      diagnostic,
+      "THÀNH CÔNG",
+      ""
+    );
+
+    return { success: true, error: "" };
+
+  } catch (error) {
+    ghiNhatKyChanDoanMail(
+      ss,
+      diagnostic,
+      "THẤT BẠI",
+      error
+    );
+
+    return {
+      success: false,
+      error: layThongBaoLoi(error)
+    };
+  }
+}
+
+
+// Chạy thủ công hàm này để so sánh:
+// 1) gửi cho chính tài khoản thực thi;
+// 2) gửi cho email @gmail.com đầu tiên trong Email_GVCN.
+// Hàm sẽ gửi 2 email thử và ghi kết quả vào MAIL_DIAGNOSTIC.
+function kiemTraQuyenGuiMail() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const effectiveUser = String(
+    Session.getEffectiveUser().getEmail() || ""
+  ).trim();
+
+  if (!kiemTraEmail(effectiveUser)) {
+    throw new Error(
+      "Không xác định được email của tài khoản thực thi."
+    );
+  }
+
+  const gvcnSheet = ss.getSheetByName(CONFIG.GVCN_SHEET);
+
+  if (!gvcnSheet) {
+    throw new Error(
+      'Không tìm thấy sheet "' + CONFIG.GVCN_SHEET + '".'
+    );
+  }
+
+  const lastRow = gvcnSheet.getLastRow();
+
+  if (lastRow < 2) {
+    throw new Error("Email_GVCN chưa có dữ liệu email để kiểm tra.");
+  }
+
+  const emails = gvcnSheet
+    .getRange(2, 4, lastRow - 1, 1)
+    .getDisplayValues()
+    .map(function(row) {
+      return String(row[0]).trim();
+    })
+    .filter(function(email) {
+      return kiemTraEmail(email);
+    });
+
+  const externalGmail = emails.find(function(email) {
+    return layTenMienEmail(email) === "gmail.com";
+  });
+
+  if (!externalGmail) {
+    throw new Error(
+      "Không tìm thấy địa chỉ @gmail.com hợp lệ trong Email_GVCN."
+    );
+  }
+
+  const internalResult = guiMailThuChanDoan(
+    ss,
+    effectiveUser,
+    "TEST NỘI BỘ"
+  );
+
+  const externalResult = guiMailThuChanDoan(
+    ss,
+    externalGmail,
+    "TEST GMAIL NGOÀI MIỀN"
+  );
+
+  const summary = {
+    effectiveUser: effectiveUser,
+    senderDomain: layTenMienEmail(effectiveUser),
+    internalResult: internalResult,
+    externalResult: externalResult
+  };
+
+  console.log("MAIL_DIAGNOSTIC_SUMMARY " + JSON.stringify(summary));
+
+  if (internalResult.success && !externalResult.success) {
+    console.error(
+      "KẾT LUẬN: Gửi nội bộ thành công nhưng gửi Gmail ngoài miền thất bại. Có khả năng quản trị Google Workspace đang chặn gửi ngoài miền."
+    );
+  } else if (!internalResult.success) {
+    console.error(
+      "KẾT LUẬN: Gửi nội bộ cũng thất bại. Kiểm tra quyền MailApp, Gmail, giấy phép và quota của tài khoản thực thi."
+    );
+  } else {
+    console.log(
+      "KẾT LUẬN: Gửi nội bộ và Gmail ngoài miền đều thành công."
+    );
+  }
+}
+
+function dichLoiMail(error) {
+  const message = String(
+    error && error.message ? error.message : error
+  );
+
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("authorization is required") ||
+    lower.includes("not have permission") ||
+    (
+      lower.includes("permission") &&
+      (lower.includes("mail") || lower.includes("authorization"))
+    )
+  ) {
+    return "LỖI: Apps Script chưa được cấp quyền gửi email";
+  }
+
+  if (
+    lower.includes("invalid email") ||
+    lower.includes("invalid argument: recipient") ||
+    lower.includes("invalid recipient")
+  ) {
+    return "LỖI: Địa chỉ email GVCN không hợp lệ";
+  }
+
+  if (
+    lower.includes("service invoked too many times") ||
+    lower.includes("limit exceeded") ||
+    lower.includes("quota") ||
+    lower.includes("too many email")
+  ) {
+    return "LỖI: Đã vượt giới hạn gửi email của tài khoản";
+  }
+
+  if (
+    lower.includes("service unavailable") ||
+    lower.includes("internal error")
+  ) {
+    return "LỖI: Dịch vụ gửi email của Google đang tạm thời không khả dụng";
+  }
+
+  if (lower.includes("failed to send email to")) {
+    return "LỖI: Google từ chối gửi email - xem MAIL_DIAGNOSTIC";
+  }
+
+  return null;
+}
+
+
+// ======================================================
+// CHỈ GHI LỖI HỆ THỐNG NGOÀI DỰ KIẾN VÀO DEBUG_LOG
+// ======================================================
+function ghiLoiHeThong(ss, sheetName, row, functionName, error) {
+  try {
+    let logSheet = ss.getSheetByName(CONFIG.SYSTEM_LOG_SHEET);
+
+    if (!logSheet) {
+      logSheet = ss.insertSheet(CONFIG.SYSTEM_LOG_SHEET);
+
+      logSheet.appendRow([
+        "Thời gian",
+        "Sheet",
+        "Dòng",
+        "Hàm",
+        "Lỗi",
+        "Chi tiết kỹ thuật"
+      ]);
+    }
+
+    const timezone = ss.getSpreadsheetTimeZone();
+    const time = Utilities.formatDate(
+      new Date(),
+      timezone,
+      "dd/MM/yyyy HH:mm:ss"
+    );
+
+    const message = error && error.message
+      ? error.message
+      : String(error);
+
+    const stack = error && error.stack
+      ? error.stack
+      : "";
+
+    logSheet.appendRow([
+      time,
+      sheetName,
+      row,
+      functionName,
+      message,
+      stack
+    ]);
+
+  } catch (logError) {
+    console.error("Không thể ghi DEBUG_LOG:", logError);
+  }
+}
+
+
+// ======================================================
+// CHẠY 1 LẦN ĐỂ TẠO INSTALLABLE ON-EDIT TRIGGER
+//
+// QUAN TRỌNG:
+// - Chạy hàm taoTriggerGuiMail() thủ công một lần.
+// - Cấp quyền cho Apps Script.
+// - Sau đó KHÔNG chạy guiMailKhiThuDo() thủ công.
+// ======================================================
+function taoTriggerGuiMail() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const handler = "guiMailKhiThuDo";
+
+  // Xóa trigger cũ cùng handler để tránh gửi trùng.
+  const triggers = ScriptApp.getProjectTriggers();
+
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === handler) {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  ScriptApp
+    .newTrigger(handler)
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+}

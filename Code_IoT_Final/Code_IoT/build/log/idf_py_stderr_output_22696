@@ -1,0 +1,6 @@
+[0;33m--- Warning: GDB cannot open serial ports accessed as COMx[0m
+[0;33m--- Using \\.\COM5 instead...[0m
+[0;33m--- esp-idf-monitor 1.9.0 on \\.\COM5 115200[0m
+[0;33m--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H[0m
+[0m--- 0x403758da: [0;33mrtc_brownout_isr_handler[0m[0m at [0;32mD:/ESP/Espressif/frameworks/esp-idf-v5.3.5/components/esp_system/port/brownout.c[0m[0m:[1;31m61[0m
+[0m

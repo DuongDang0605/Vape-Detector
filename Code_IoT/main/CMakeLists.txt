@@ -1,0 +1,11 @@
+idf_component_register(SRCS "main.c"
+                            "i2c_bus.c"
+                            "sht3x.c"
+                            "sgp41.c"
+                            "pms7003.c"
+                            "vape_logic.c"
+                            "oled_ssd1306.c"
+                            "glcdfont.c"
+                            "ble_app.c"
+                            "buzzer.c"
+                       INCLUDE_DIRS ".")

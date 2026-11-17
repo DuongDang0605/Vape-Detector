@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "D:/Vape_detector/Code_vape_detector/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}

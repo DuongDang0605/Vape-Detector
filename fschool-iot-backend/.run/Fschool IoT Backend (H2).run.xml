@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Fschool IoT Backend (H2)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="h2" />
+    <module name="fschool-iot-backend" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.fschool.iotbackend.FschoolIoTBackendApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

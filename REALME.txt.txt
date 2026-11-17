@@ -1,0 +1,9 @@
+Hệ thống:
+Tầng 1: Các Cảm biến đo 
+Tầng 2: ESP32
+Tầng 3: Server(Spring boost) + AI(hiện tại tạm bỏ AI thay bang các thuật toán được nêu trong main.pdf)
+Cách hoạt động: 
+Tầng 1 do dữ lieu chuyển dữ lieu cho tầng 2
+Tầng 2 lấy dữ lieu so sánh với ngưỡng. 
+TH1: trong ngưỡng: gửi dữ lieu cho tầng 3 với tầng suất thấp 
+TH2: vượt ngưỡng: gửi dữ lieu tầng suất cao lên tầng 3, tầng 3 sẽ quyết định xem là giả hay thật để kích hoạt báo động

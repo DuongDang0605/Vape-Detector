@@ -1,0 +1,178 @@
+W+����ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x1 (POWERON),boot:0xa (SPI_FAST_FLASH_BOOT)
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce2810,len:0x1828
+load:0x403c8700,len:0x4
+load:0x403c8704,len:0xce8
+load:0x403cb700,len:0x2eb8
+entry 0x403c8918
+[0;32mI (27) boot: ESP-IDF v5.3.5 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Sep 24 2026 15:37:27[0m
+[0;32mI (27) boot: Multicore bootloader[0m
+[0;32mI (30) boot: chip revision: v0.2[0m
+[0;32mI (34) boot: efuse block revision: v1.3[0m
+[0;32mI (38) boot.esp32s3: Boot SPI Speed : 80MHz[0m
+[0;32mI (43) boot.esp32s3: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32s3: SPI Flash Size : 2MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (84) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3c060020 size=15eb4h ( 89780) map[0m
+[0;32mI (120) esp_image: segment 1: paddr=00025edc vaddr=3fc9ad00 size=041cch ( 16844) load[0m
+[0;32mI (124) esp_image: segment 2: paddr=0002a0b0 vaddr=40374000 size=05f68h ( 24424) load[0m
+[0;32mI (132) esp_image: segment 3: paddr=00030020 vaddr=42000020 size=50344h (328516) map[0m
+[0;32mI (194) esp_image: segment 4: paddr=0008036c vaddr=40379f68 size=10cfch ( 68860) load[0m
+[0;32mI (219) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (219) boot: Disabling RNG early entropy source...[0m
+[0;32mI (231) cpu_start: Multicore app[0m
+[0;32mI (240) cpu_start: Pro cpu start user code[0m
+[0;32mI (240) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (240) app_init: Application information:[0m
+[0;32mI (243) app_init: Project name:     vape_detector[0m
+[0;32mI (249) app_init: App version:      1[0m
+[0;32mI (253) app_init: Compile time:     Sep 24 2026 15:36:47[0m
+[0;32mI (259) app_init: ELF file SHA256:  99ce30416...[0m
+[0;32mI (264) app_init: ESP-IDF:          v5.3.5[0m
+[0;32mI (269) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (274) efuse_init: Max chip rev:     v0.99 [0m
+[0;32mI (279) efuse_init: Chip rev:         v0.2[0m
+[0;32mI (284) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (291) heap_init: At 3FCA0830 len 00048EE0 (291 KiB): RAM[0m
+[0;32mI (297) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM[0m
+[0;32mI (303) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM[0m
+[0;32mI (309) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM[0m
+[0;32mI (316) spi_flash: detected chip: boya[0m
+[0;32mI (320) spi_flash: flash io: dio[0m
+[0;33mW (324) spi_flash: Detected size(16384k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;33mW (337) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+[0;32mI (348) sleep: Configure to isolate all GPIO pins in sleep state[0m
+[0;32mI (354) sleep: Enable automatic switching of GPIO sleep configuration[0m
+[0;32mI (362) coexist: coex firmware version: b351c23[0m
+[0;32mI (367) coexist: coexist rom version e7ae62f[0m
+[0;32mI (372) main_task: Started on CPU0[0m
+[0;32mI (382) main_task: Calling app_main()[0m
+[0;32mI (382) MAIN: ===============================================[0m
+[0;32mI (382) MAIN:       ESP32-S3 VAPE DETECTOR STARTING          [0m
+[0;32mI (392) MAIN: ===============================================[0m
+[0;32mI (402) VAPE_LOGIC: Vape detection logic initialized[0m
+[0;32mI (402) I2C_BUS: I2C master initialized successfully (SDA: GPIO8, SCL: GPIO9, Freq: 100000Hz)[0m
+[0;32mI (412) PMS7003: UART connection initialized successfully (TX: GPIO17, RX: GPIO18, Baud: 9600)[0m
+[0;32mI (422) OLED: SSD1306 OLED initialized successfully on shared bus (Addr: 0x3C)[0m
+[0;32mI (522) gpio: GPIO[38]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0 [0m
+[0;32mI (522) BUZZER: Buzzer GPIO38 initialized successfully (Active LOW)[0m
+[0;32mI (532) MAIN: Buzzer startup test: beeping for 1 second...[0m
+[0;32mI (1532) BLE_INIT: BT controller compile version [b7de11e][0m
+[0;32mI (1532) BLE_INIT: Using main XTAL as clock source[0m
+[0;32mI (1532) BLE_INIT: Feature Config, ADV:1, BLE_50:1, DTM:1, SCAN:1, CCA:0, SMP:1, CONNECT:1[0m
+[0;32mI (1542) BLE_INIT: Bluetooth MAC: 1c:db:d4:78:5e:ae[0m
+[0;32mI (1552) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10[0m
+[0;32mI (1592) BLE_APP: NimBLE host task started[0m
+[0;32mI (1602) NimBLE: GAP procedure initiated: stop advertising.
+[0m
+[0;32mI (1602) NimBLE: GAP procedure initiated: advertise; [0m
+[0;32mI (1602) NimBLE: disc_mode=2[0m
+[0;32mI (1602) NimBLE:  adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=0 adv_itvl_max=0[0m
+[0;32mI (1612) NimBLE: 
+[0m
+[0;32mI (1622) BLE_APP: BLE advertising started (Device Name: ESP32S3_VAPE)[0m
+[0;32mI (1622) BLE_APP: NimBLE BLE GATT Server initialized successfully[0m
+[0;32mI (1752) SHT3X: SHT3x detected and communication verified successfully (T: 29.88C, RH: 68.63%)[0m
+[0;32mI (1802) SGP41: SGP41 detected and verified successfully (VOC raw: 29087, NOx raw: 20257)[0m
+[0;32mI (1802) MAIN: Starting 10-second SGP41 sensor conditioning phase...[0m
+[0;32mI (1822) MAIN: Conditioning [1/10] - Compensating with T: 29.9C, RH: 68.6%[0m
+[0;32mI (1872) MAIN: Conditioning [1/10] - SGP41 SRAW_VOC: 29345 ticks[0m
+[0;32mI (2982) MAIN: Conditioning [2/10] - Compensating with T: 29.9C, RH: 68.6%[0m
+[0;32mI (3032) MAIN: Conditioning [2/10] - SGP41 SRAW_VOC: 29461 ticks[0m
+[0;32mI (4142) MAIN: Conditioning [3/10] - Compensating with T: 29.9C, RH: 68.6%[0m
+[0;32mI (4192) MAIN: Conditioning [3/10] - SGP41 SRAW_VOC: 29560 ticks[0m
+[0;32mI (5302) MAIN: Conditioning [4/10] - Compensating with T: 29.8C, RH: 68.5%[0m
+[0;32mI (5352) MAIN: Conditioning [4/10] - SGP41 SRAW_VOC: 29641 ticks[0m
+[0;32mI (6462) MAIN: Conditioning [5/10] - Compensating with T: 29.9C, RH: 68.5%[0m
+[0;32mI (6512) MAIN: Conditioning [5/10] - SGP41 SRAW_VOC: 29719 ticks[0m
+[0;32mI (7622) MAIN: Conditioning [6/10] - Compensating with T: 29.9C, RH: 68.5%[0m
+[0;32mI (7672) MAIN: Conditioning [6/10] - SGP41 SRAW_VOC: 29793 ticks[0m
+[0;32mI (8782) MAIN: Conditioning [7/10] - Compensating with T: 29.8C, RH: 68.5%[0m
+[0;32mI (8832) MAIN: Conditioning [7/10] - SGP41 SRAW_VOC: 29870 ticks[0m
+[0;32mI (9942) MAIN: Conditioning [8/10] - Compensating with T: 29.8C, RH: 68.5%[0m
+[0;32mI (9992) MAIN: Conditioning [8/10] - SGP41 SRAW_VOC: 29928 ticks[0m
+[0;32mI (11102) MAIN: Conditioning [9/10] - Compensating with T: 29.8C, RH: 68.4%[0m
+[0;32mI (11152) MAIN: Conditioning [9/10] - SGP41 SRAW_VOC: 29996 ticks[0m
+[0;32mI (12262) MAIN: Conditioning [10/10] - Compensating with T: 29.8C, RH: 68.4%[0m
+[0;32mI (12312) MAIN: Conditioning [10/10] - SGP41 SRAW_VOC: 30060 ticks[0m
+[0;32mI (13402) VAPE_LOGIC: PM2.5 dynamic baseline set to: 36.0[0m
+[0;32mI (13402) MAIN: SGP41 conditioning completed. Starting active monitoring loop...[0m
+[0;32mI (13472) VAPE_LOGIC: Initial VOC baseline established: 30120.0 ticks[0m
+[0;32mI (13472) MAIN: --------------------------------------------------[0m
+[0;32mI (13472) MAIN: T: 29.83 C | RH: 68.43 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (13482) MAIN: VOC raw: 30120 | VOC base: 30120.0 | VOC drop: 0.0 | NOx raw: 22093[0m
+[0;32mI (13482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (14472) MAIN: --------------------------------------------------[0m
+[0;32mI (14472) MAIN: T: 29.81 C | RH: 68.41 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (14472) MAIN: VOC raw: 30217 | VOC base: 30120.0 | VOC drop: 0.0 | NOx raw: 23020[0m
+[0;32mI (14482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (15472) MAIN: --------------------------------------------------[0m
+[0;32mI (15472) MAIN: T: 29.81 C | RH: 68.41 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (15472) MAIN: VOC raw: 30274 | VOC base: 30124.9 | VOC drop: 0.0 | NOx raw: 22721[0m
+[0;32mI (15482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (16472) MAIN: --------------------------------------------------[0m
+[0;32mI (16472) MAIN: T: 29.83 C | RH: 68.39 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (16472) MAIN: VOC raw: 30320 | VOC base: 30132.3 | VOC drop: 0.0 | NOx raw: 22515[0m
+[0;32mI (16482) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (17422) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;32mI (17472) MAIN: --------------------------------------------------[0m
+[0;32mI (17472) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (17472) MAIN: VOC raw: 30095 | VOC base: 30141.7 | VOC drop: 46.7 | NOx raw: 21202[0m
+[0;32mI (17482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (18472) MAIN: --------------------------------------------------[0m
+[0;32mI (18472) MAIN: T: 29.83 C | RH: 68.36 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (18472) MAIN: VOC raw: 30397 | VOC base: 30141.6 | VOC drop: 0.0 | NOx raw: 22152[0m
+[0;32mI (18482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (19472) MAIN: --------------------------------------------------[0m
+[0;32mI (19472) MAIN: T: 29.83 C | RH: 68.41 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (19472) MAIN: VOC raw: 30410 | VOC base: 30154.4 | VOC drop: 0.0 | NOx raw: 21993[0m
+[0;32mI (19482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (20472) MAIN: --------------------------------------------------[0m
+[0;32mI (20472) MAIN: T: 29.81 C | RH: 68.39 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (20472) MAIN: VOC raw: 30448 | VOC base: 30167.2 | VOC drop: 0.0 | NOx raw: 21842[0m
+[0;32mI (20482) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (21422) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;32mI (21472) MAIN: --------------------------------------------------[0m
+[0;32mI (21472) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (21472) MAIN: VOC raw: 30232 | VOC base: 30181.2 | VOC drop: 0.0 | NOx raw: 20587[0m
+[0;32mI (21482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (22472) MAIN: --------------------------------------------------[0m
+[0;32mI (22472) MAIN: T: 29.79 C | RH: 68.27 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (22472) MAIN: VOC raw: 30525 | VOC base: 30183.7 | VOC drop: 0.0 | NOx raw: 21554[0m
+[0;32mI (22482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (23472) MAIN: --------------------------------------------------[0m
+[0;32mI (23472) MAIN: T: 29.77 C | RH: 68.25 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (23472) MAIN: VOC raw: 30555 | VOC base: 30200.8 | VOC drop: 0.0 | NOx raw: 21430[0m
+[0;32mI (23482) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (24422) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;32mI (24472) MAIN: --------------------------------------------------[0m
+[0;32mI (24472) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (24472) MAIN: VOC raw: 30319 | VOC base: 30218.5 | VOC drop: 0.0 | NOx raw: 20204[0m
+[0;32mI (24482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (25472) MAIN: --------------------------------------------------[0m
+[0;32mI (25472) MAIN: T: 29.79 C | RH: 68.28 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (25472) MAIN: VOC raw: 30600 | VOC base: 30223.5 | VOC drop: 0.0 | NOx raw: 21203[0m
+[0;32mI (25482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (26472) MAIN: --------------------------------------------------[0m
+[0;32mI (26472) MAIN: T: 29.79 C | RH: 68.27 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (26472) MAIN: VOC raw: 30627 | VOC base: 30242.4 | VOC drop: 0.0 | NOx raw: 21088[0m
+[0;32mI (26482) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (27422) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;32mI (27472) MAIN: --------------------------------------------------[0m
+[0;32mI (27472) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (27472) MAIN: VOC raw: 30406 | VOC base: 30261.6 | VOC drop: 0.0 | NOx raw: 19875[0m
+[0;32mI (27482) MAIN: STATUS: CLEAN AIR[0m
+[0;32mI (28472) MAIN: --------------------------------------------------[0m
+[0;32mI (28472) MAIN: T: 29.77 C | RH: 68.38 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (28472) MAIN: VOC raw: 30662 | VOC base: 30268.8 | VOC drop: 0.0 | NOx raw: 20896[0m
+[0;32mI (28482) MAIN: STATUS: CLEAN AIR[0m

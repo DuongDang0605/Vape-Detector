@@ -1,0 +1,116 @@
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce2810,len:0x1828
+load:0x403c8700,len:0x4
+load:0x403c8704,len:0xce8
+load:0x403cb700,len:0x2eb8
+entry 0x403c8918
+[0;32mI (27) boot: ESP-IDF v5.3.5 2nd stage bootloader[0m
+[0;32mI (27) boot: compile time Aug 20 2026 17:11:53[0m
+[0;32mI (27) boot: Multicore bootloader[0m
+[0;32mI (30) boot: chip revision: v0.2[0m
+[0;32mI (34) boot: efuse block revision: v1.3[0m
+[0;32mI (38) boot.esp32s3: Boot SPI Speed : 80MHz[0m
+[0;32mI (43) boot.esp32s3: SPI Mode       : DIO[0m
+[0;32mI (48) boot.esp32s3: SPI Flash Size : 2MB[0m
+[0;32mI (52) boot: Enabling RNG early entropy source...[0m
+[0;32mI (58) boot: Partition Table:[0m
+[0;32mI (61) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (69) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (76) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (84) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (91) boot: End of partition table[0m
+[0;32mI (95) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0ca34h ( 51764) map[0m
+[0;32mI (113) esp_image: segment 1: paddr=0001ca5c vaddr=3fc93f00 size=02ee8h ( 12008) load[0m
+[0;32mI (116) esp_image: segment 2: paddr=0001f94c vaddr=40374000 size=006cch (  1740) load[0m
+[0;32mI (121) esp_image: segment 3: paddr=00020020 vaddr=42000020 size=1c208h (115208) map[0m
+[0;32mI (150) esp_image: segment 4: paddr=0003c230 vaddr=403746cc size=0f820h ( 63520) load[0m
+[0;32mI (171) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (171) boot: Disabling RNG early entropy source...[0m
+[0;32mI (183) cpu_start: Multicore app[0m
+[0;32mI (192) cpu_start: Pro cpu start user code[0m
+[0;32mI (192) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (192) app_init: Application information:[0m
+[0;32mI (195) app_init: Project name:     vape_detector[0m
+[0;32mI (201) app_init: App version:      1[0m
+[0;32mI (205) app_init: Compile time:     Aug 20 2026 17:03:04[0m
+[0;32mI (211) app_init: ELF file SHA256:  6be591099...[0m
+[0;32mI (216) app_init: ESP-IDF:          v5.3.5[0m
+[0;32mI (221) efuse_init: Min chip rev:     v0.0[0m
+[0;32mI (226) efuse_init: Max chip rev:     v0.99 [0m
+[0;32mI (231) efuse_init: Chip rev:         v0.2[0m
+[0;32mI (236) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (243) heap_init: At 3FC97ED0 len 00051840 (326 KiB): RAM[0m
+[0;32mI (249) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM[0m
+[0;32mI (255) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM[0m
+[0;32mI (261) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM[0m
+[0;32mI (268) spi_flash: detected chip: boya[0m
+[0;32mI (272) spi_flash: flash io: dio[0m
+[0;33mW (276) spi_flash: Detected size(16384k) larger than the size in the binary image header(2048k). Using the size in the binary image header.[0m
+[0;33mW (289) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+[0;32mI (300) sleep: Configure to isolate all GPIO pins in sleep state[0m
+[0;32mI (306) sleep: Enable automatic switching of GPIO sleep configuration[0m
+[0;32mI (314) main_task: Started on CPU0[0m
+[0;32mI (324) main_task: Calling app_main()[0m
+[0;32mI (324) MAIN: ===============================================[0m
+[0;32mI (324) MAIN:       ESP32-S3 VAPE DETECTOR STARTING          [0m
+[0;32mI (334) MAIN: ===============================================[0m
+[0;32mI (344) VAPE_LOGIC: Vape detection logic initialized[0m
+[0;32mI (344) I2C_BUS: I2C master initialized successfully (SDA: GPIO8, SCL: GPIO9, Freq: 100000Hz)[0m
+[0;32mI (354) PMS7003: UART connection initialized successfully (TX: GPIO17, RX: GPIO18, Baud: 9600)[0m
+[0;31mE (364) OLED: Failed to initialize SSD1306 OLED: ESP_FAIL[0m
+[0;33mW (374) MAIN: OLED screen init failed, continuing without display[0m
+[0;31mE (474) SHT3X: Failed to communicate with SHT3x sensor: ESP_FAIL[0m
+[0;33mW (474) MAIN: SHT3x init failed, will attempt to read anyway[0m
+[0;31mE (474) SGP41: Failed to communicate with SGP41 sensor: ESP_FAIL[0m
+[0;33mW (474) MAIN: SGP41 init failed, will attempt to read anyway[0m
+[0;32mI (484) MAIN: Starting 10-second SGP41 sensor conditioning phase...[0m
+[0;33mW (494) MAIN: Conditioning [1/10] - SHT3x read error, using default compensation[0m
+[0;31mE (504) MAIN: Conditioning [1/10] - SGP41 conditioning command failed![0m
+[0;33mW (1504) MAIN: Conditioning [2/10] - SHT3x read error, using default compensation[0m
+[0;31mE (1504) MAIN: Conditioning [2/10] - SGP41 conditioning command failed![0m
+[0;33mW (2504) MAIN: Conditioning [3/10] - SHT3x read error, using default compensation[0m
+[0;31mE (2504) MAIN: Conditioning [3/10] - SGP41 conditioning command failed![0m
+[0;33mW (3504) MAIN: Conditioning [4/10] - SHT3x read error, using default compensation[0m
+[0;31mE (3504) MAIN: Conditioning [4/10] - SGP41 conditioning command failed![0m
+[0;33mW (4504) MAIN: Conditioning [5/10] - SHT3x read error, using default compensation[0m
+[0;31mE (4504) MAIN: Conditioning [5/10] - SGP41 conditioning command failed![0m
+[0;33mW (5504) MAIN: Conditioning [6/10] - SHT3x read error, using default compensation[0m
+[0;31mE (5504) MAIN: Conditioning [6/10] - SGP41 conditioning command failed![0m
+[0;33mW (6504) MAIN: Conditioning [7/10] - SHT3x read error, using default compensation[0m
+[0;31mE (6504) MAIN: Conditioning [7/10] - SGP41 conditioning command failed![0m
+[0;33mW (7504) MAIN: Conditioning [8/10] - SHT3x read error, using default compensation[0m
+[0;31mE (7504) MAIN: Conditioning [8/10] - SGP41 conditioning command failed![0m
+[0;33mW (8504) MAIN: Conditioning [9/10] - SHT3x read error, using default compensation[0m
+[0;31mE (8504) MAIN: Conditioning [9/10] - SGP41 conditioning command failed![0m
+[0;33mW (9504) MAIN: Conditioning [10/10] - SHT3x read error, using default compensation[0m
+[0;31mE (9504) MAIN: Conditioning [10/10] - SGP41 conditioning command failed![0m
+[0;32mI (10504) MAIN: SGP41 conditioning completed. Starting active monitoring loop...[0m
+[0;31mE (10504) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;31mE (10504) MAIN: SGP41 read failed (ESP_FAIL)[0m
+[0;32mI (10514) VAPE_LOGIC: Initial VOC baseline established: 0.0 ticks[0m
+[0;32mI (10514) MAIN: --------------------------------------------------[0m
+[0;32mI (10524) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (10534) MAIN: VOC raw: 0 | VOC base: 0.0 | VOC drop: 0.0 | NOx raw: 0[0m
+[0;32mI (10534) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (11504) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;31mE (11504) MAIN: SGP41 read failed (ESP_FAIL)[0m
+[0;32mI (11504) MAIN: --------------------------------------------------[0m
+[0;32mI (11504) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (11514) MAIN: VOC raw: 0 | VOC base: 0.0 | VOC drop: 0.0 | NOx raw: 0[0m
+[0;32mI (11524) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (12504) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;31mE (12504) MAIN: SGP41 read failed (ESP_FAIL)[0m
+[0;32mI (12504) MAIN: --------------------------------------------------[0m
+[0;32mI (12504) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (12514) MAIN: VOC raw: 0 | VOC base: 0.0 | VOC drop: 0.0 | NOx raw: 0[0m
+[0;32mI (12524) MAIN: STATUS: CLEAN AIR[0m
+[0;31mE (13504) MAIN: SHT3x read failed (ESP_FAIL), using default compensation values[0m
+[0;31mE (13504) MAIN: SGP41 read failed (ESP_FAIL)[0m
+[0;32mI (13504) MAIN: --------------------------------------------------[0m
+[0;32mI (13504) MAIN: T: 25.00 C | RH: 50.00 % | PM2.5: 0 ug/m3 [STALE][0m
+[0;32mI (13514) MAIN: VOC raw: 0 | VOC base: 0.0 | VOC drop: 0.0 | NOx raw: 0[0m
+[0;32mI (13524) MAIN: STATUS: CLEAN AIR[0m

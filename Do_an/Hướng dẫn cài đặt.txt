@@ -1,0 +1,5 @@
+Dữ liệu để train ai sẽ được lấy trong link :https://drive.google.com/drive/folders/1Xp-p6ot-8XXQMR2JqtC3RI1mBTUxvnf0?usp=sharing
+1 Lấy code trong file "model_locnhieu" và paste từng cell lên google colab để train 
+2 Lấy code trong file "model_phanloai" và paste từng cell lên google colab để train 
+3 Vào trang wed : hugging face vào mục file paste code như trong thư mục "hugging_face" để tạo một server chạy hai model train được từ bước 1 và 2
+4 Sử dụng  espidf để nạp code từ foder "inmp441_recorder" vào esp32 c6 
